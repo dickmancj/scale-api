@@ -1,27 +1,22 @@
-var Hapi = require('hapi'),
-    Routes = require('./routes');
+'use strict';
 
-require('./database');
-
+var Hapi = require('hapi');
 var server = new Hapi.Server();
 
-server.register([require('vision'), require('inert')], function (err) {
-    server.views({
-        engines: {
-            html: require('handlebars')
-        },
-        relativeTo: __dirname,
-        path: './templates'
-    });
-});
+server.connection({ host: '127.0.0.1', port: 8080, labels: ['api'] });
+server.connection({ host: '127.0.0.1', port: 8081, labels: ['ingest'] });
 
-server.connection({
-    host: '127.0.0.1',
-    port: 8080
-});
-
-server.route(Routes.endpoints);
-
-server.start(function () {
-    console.log('Server running at: ', server.info.uri);
+server.register([
+    {
+        register: require('./ingest'),
+        options: {}
+    }
+], function (err) {
+    if (err) {
+        console.log(err);
+    } else {
+        server.start(function () {
+            console.log('Server running');
+        });
+    }
 });
